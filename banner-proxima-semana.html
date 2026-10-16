@@ -12,6 +12,8 @@
     ou classes genéricas do LMS.
   */
   @keyframes sv-spin{to{transform:rotate(360deg);}}
+  @keyframes sv-fall{0%{transform:translateY(-20px) rotate(0deg);}100%{transform:translateY(520px) rotate(600deg);}}
+  @keyframes sv-grow{from{width:0;}}
 
   #bannerWrapper{
     --roxo:#442563; --laranja:#ed6b04; --rosa:#ca2665;
@@ -270,12 +272,34 @@
   #bannerWrapper .trail-text strong{font-size:13.5px;line-height:1.25;overflow-wrap:break-word;}
   #bannerWrapper .trail-text span{margin-top:2px;font-size:12px;font-weight:700;color:var(--rosa);}
   /* Trilha compacta: até 6 cursos, só título + seta */
-  #bannerWrapper .trail-compact{gap:8px;}
+  #bannerWrapper .trail-compact{gap:10px 8px;}
   #bannerWrapper .trail-compact .trail-item{padding:8px 12px 8px 8px;gap:10px;border-radius:14px;}
   #bannerWrapper .trail-compact .trail-num{flex-basis:28px;width:28px;height:28px;border-radius:10px;font-size:13px;}
   #bannerWrapper .trail-compact .trail-text{flex:1;}
   #bannerWrapper .trail-compact .trail-text strong{font-size:13px;}
   #bannerWrapper .trail-go{flex:none;margin-left:auto;font-weight:700;color:var(--rosa);}
+  /* Clima festivo: trilha completa */
+  #bannerWrapper .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
+  #bannerWrapper .confetti i{position:absolute;top:-16px;width:7px;height:12px;border-radius:2px;opacity:.9;animation:sv-fall 7s linear infinite;}
+  #bannerWrapper .confetti i:nth-child(1){left:6%;background:var(--g-yellow);animation-duration:6.5s;}
+  #bannerWrapper .confetti i:nth-child(2){left:18%;background:var(--rosa);animation-delay:-2s;animation-duration:8s;}
+  #bannerWrapper .confetti i:nth-child(3){left:30%;background:var(--g-blue);animation-delay:-4.5s;width:9px;height:9px;border-radius:50%;}
+  #bannerWrapper .confetti i:nth-child(4){left:42%;background:var(--g-green);animation-delay:-1s;animation-duration:7.5s;}
+  #bannerWrapper .confetti i:nth-child(5){left:55%;background:var(--laranja);animation-delay:-5.5s;}
+  #bannerWrapper .confetti i:nth-child(6){left:66%;background:#fff;animation-delay:-3s;animation-duration:9s;width:6px;height:6px;border-radius:50%;}
+  #bannerWrapper .confetti i:nth-child(7){left:77%;background:var(--g-red);animation-delay:-6.5s;animation-duration:6s;}
+  #bannerWrapper .confetti i:nth-child(8){left:88%;background:var(--g-yellow);animation-delay:-2.5s;animation-duration:8.5s;}
+  #bannerWrapper .confetti i:nth-child(9){left:94%;background:var(--g-blue);animation-delay:-4s;}
+  #bannerWrapper .confetti i:nth-child(10){left:48%;background:var(--rosa);animation-delay:-7s;animation-duration:9.5s;width:9px;height:9px;border-radius:50%;}
+  #bannerWrapper .serie-chip.chip-gold .num{background:linear-gradient(90deg,var(--g-yellow),var(--laranja));color:#1f1b24;}
+  #bannerWrapper .trail-progress{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  #bannerWrapper .trail-bar{flex:1;height:8px;border-radius:999px;background:var(--outline);overflow:hidden;}
+  #bannerWrapper .trail-bar-fill{display:block;width:100%;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 35%,var(--g-yellow) 65%,var(--g-green));}
+  #bannerWrapper .sv-slide.is-active .trail-bar-fill{animation:sv-grow 1.6s cubic-bezier(.2,.8,.2,1);}
+  #bannerWrapper .trail-progress span{flex:none;font-size:12px;font-weight:700;color:var(--ink);}
+  #bannerWrapper .trail-item.is-new{background:linear-gradient(135deg,#fff1f6,var(--surface-2));border-color:rgba(202,38,101,.35);}
+  #bannerWrapper .trail-item.is-new{position:relative;}
+  #bannerWrapper .trail-new{position:absolute;top:-7px;right:12px;padding:1px 8px;border-radius:999px;background:var(--rosa);color:#fff;font-size:9.5px;font-weight:700;line-height:1.4;letter-spacing:.6px;text-transform:uppercase;box-shadow:0 3px 8px rgba(202,38,101,.35);}
   /* Biblioteca do Saber */
   #bannerWrapper .lib-slide{
     flex:1;

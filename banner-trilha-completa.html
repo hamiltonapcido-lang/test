@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saber Virtual — Carrossel de Cursos</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    Todo o CSS fica preso ao #bannerWrapper: o LMS insere este HTML dentro da
+    própria página, então nada aqui pode afetar (ou ser afetado por) html, body
+    ou classes genéricas do LMS.
+  */
+  @keyframes sv-spin{to{transform:rotate(360deg);}}
+  @keyframes sv-fall{0%{transform:translateY(-20px) rotate(0deg);}100%{transform:translateY(520px) rotate(600deg);}}
+  @keyframes sv-grow{from{width:0;}}
+
+  #bannerWrapper{
+    --roxo:#442563; --laranja:#ed6b04; --rosa:#ca2665;
+    --branco:#ffffff; --preto:#000000;
+    --g-blue:#4285F4; --g-red:#EA4335; --g-yellow:#FBBC05; --g-green:#34A853;
+    --surface:#ffffff; --surface-2:#f6f3fb; --outline:#e3e0e8;
+    --ink:#1f1b24; --ink-soft:#5f5a67;
+    --glass:rgba(255,255,255,0.14); --glass-border:rgba(255,255,255,0.25);
+    box-sizing:border-box;
+    width:100%;
+    max-width:min(1024px, calc(100vw - 48px));
+    margin:16px auto;
+    border-radius:28px;
+    overflow:hidden;
+    position:relative;
+    background:var(--surface);
+    box-shadow:0 20px 40px rgba(0,0,0,.18);
+    font-family:'Google Sans','Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+    font-size:14px;
+    line-height:1.4;
+    text-align:left;
+    color:var(--ink);
+  }
+  #bannerWrapper *, #bannerWrapper *::before, #bannerWrapper *::after{box-sizing:border-box;}
+  #bannerWrapper h2, #bannerWrapper h3, #bannerWrapper h4, #bannerWrapper p{font-family:inherit;text-transform:none;}
+  #bannerWrapper a, #bannerWrapper a:hover, #bannerWrapper a:focus{text-decoration:none;}
+  /* Slides empilhados na mesma célula: a largura do banner nunca passa da tela */
+  #bannerWrapper .banner-track{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    width:100%;
+  }
+  #bannerWrapper .sv-slide{
+    grid-area:1 / 1;
+    width:100%;
+    min-width:0;
+    height:386px;
+    position:relative;
+    display:flex;
+    color:var(--ink);
+    overflow:hidden;
+    opacity:0;
+    visibility:hidden;
+    transform:translateX(20px);
+    transition:opacity .6s ease, transform .6s ease, visibility 0s linear .6s;
+  }
+  #bannerWrapper .sv-slide.is-active{
+    opacity:1;
+    visibility:visible;
+    transform:none;
+    transition:opacity .6s ease, transform .6s ease;
+  }
+  /* Faixa lateral */
+  #bannerWrapper .sv-side{
+    flex:0 0 36%;
+    max-width:36%;
+    min-width:0;
+    position:relative;
+    background:linear-gradient(150deg,#1a0b2e 0%,var(--roxo) 60%,#3b2a7a 100%);
+    color:var(--branco);
+    padding:28px 26px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    overflow:hidden;
+  }
+  #bannerWrapper .sv-side-b5{
+    background:linear-gradient(150deg,#1a052e 0%,var(--roxo) 55%,#681b4f 100%);
+  }
+  #bannerWrapper .glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;}
+  #bannerWrapper .glow-a{width:240px;height:240px;background:var(--rosa);top:-80px;right:-70px;}
+  #bannerWrapper .glow-b{width:200px;height:200px;background:var(--laranja);bottom:-70px;left:-60px;}
+  #bannerWrapper .glow-pink{width:200px;height:200px;background:#b32468;bottom:-70px;left:-60px;}
+  #bannerWrapper .arcs{position:absolute;inset:0;pointer-events:none;opacity:.85;overflow:hidden;}
+  #bannerWrapper .arc{position:absolute;border-radius:50%;border:6px solid transparent;}
+  #bannerWrapper .arc-1{width:300px;height:300px;right:-120px;top:-60px;border-top-color:var(--g-blue);border-right-color:var(--g-red);animation:sv-spin 26s linear infinite;}
+  #bannerWrapper .arc-2{width:200px;height:200px;left:-80px;bottom:-40px;border-bottom-color:var(--g-yellow);border-left-color:var(--g-green);animation:sv-spin 20s linear infinite reverse;}
+  #bannerWrapper .arc-b5-1{border-top-color:var(--rosa);border-right-color:rgba(255,255,255,0.4);}
+  #bannerWrapper .arc-b5-2{border-bottom-color:#e0357d;border-left-color:var(--branco);}
+  #bannerWrapper .side-top{position:relative;z-index:2;}
+  #bannerWrapper .serie-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    max-width:100%;
+  }
+  #bannerWrapper .serie-chip .num{
+    background:linear-gradient(90deg,var(--laranja),var(--rosa));
+    min-width:20px;
+    height:20px;
+    padding:0 6px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+  }
+  #bannerWrapper .serie-chip.chip-pink .num{
+    background:linear-gradient(90deg,var(--rosa),#8e1248);
+  }
+  #bannerWrapper .icon-badge{
+    width:64px;
+    height:64px;
+    margin:22px 0 12px;
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    position:relative;
+    z-index:2;
+  }
+  #bannerWrapper .sv-side h3{position:relative;z-index:2;margin:0;font-size:18px;line-height:1.25;font-weight:500;color:var(--branco);}
+  #bannerWrapper .sv-side h3 b{font-weight:700;}
+  #bannerWrapper .sv-side small{position:relative;z-index:2;display:block;margin-top:8px;font-size:12.5px;opacity:.85;line-height:1.4;}
+  #bannerWrapper .google-card{
+    position:relative;
+    z-index:2;
+    background:var(--branco);
+    color:#3c4043;
+    border-radius:16px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+  }
+  #bannerWrapper .google-card.card-pink{color:var(--roxo);}
+  #bannerWrapper .g-dots{display:inline-flex;gap:4px;flex:none;}
+  #bannerWrapper .g-dots i{width:9px;height:9px;border-radius:50%;display:block;}
+  #bannerWrapper .g-dots i:nth-child(1){background:var(--g-blue);}
+  #bannerWrapper .g-dots i:nth-child(2){background:var(--g-red);}
+  #bannerWrapper .g-dots i:nth-child(3){background:var(--g-yellow);}
+  #bannerWrapper .g-dots i:nth-child(4){background:var(--g-green);}
+  #bannerWrapper .google-card span{font-size:12.5px;font-weight:500;line-height:1.3;}
+  #bannerWrapper .google-card span b{font-weight:700;}
+  /* Conteúdo Principal */
+  #bannerWrapper .sv-main{
+    flex:1;
+    min-width:0;
+    padding:26px 34px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(66,133,244,.10), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(234,67,53,.08), transparent 45%),
+      var(--surface);
+    overflow:hidden;
+  }
+  #bannerWrapper .sv-main-b5{
+    background:
+      radial-gradient(circle at 100% 0%, rgba(202,38,101,.10), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(68,37,99,.08), transparent 45%),
+      var(--surface);
+  }
+  #bannerWrapper .eyebrow{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--rosa);margin-bottom:6px;}
+  #bannerWrapper .sv-main h2{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.8px;font-weight:700;color:var(--ink);overflow-wrap:break-word;}
+  #bannerWrapper .sv-main h2 .grad{background:linear-gradient(90deg,var(--g-blue),var(--g-red) 45%,var(--laranja) 75%,var(--g-green));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #bannerWrapper .sv-main h2 .grad-rosa{background:linear-gradient(90deg,var(--roxo),var(--rosa) 60%,#e0357d);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #bannerWrapper .sv-lead{margin:10px 0 0;font-size:14px;font-weight:400;line-height:1.5;color:var(--ink-soft);overflow-wrap:break-word;}
+  #bannerWrapper .info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:14px 0 0;}
+  #bannerWrapper .sub-box{
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    border-radius:16px;
+    padding:11px 14px;
+    font-size:12.5px;
+    line-height:1.4;
+    color:var(--ink-soft);
+    min-width:0;
+    overflow-wrap:break-word;
+  }
+  #bannerWrapper .sub-box strong{display:block;margin-bottom:2px;font-size:13.5px;color:var(--ink);}
+  #bannerWrapper .sub-box.b-roxo{border-left:4px solid var(--roxo);}
+  #bannerWrapper .sub-box.b-rosa{border-left:4px solid var(--rosa);}
+  #bannerWrapper .sv-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  #bannerWrapper .sv-badge{padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:500;line-height:1.3;white-space:normal;border:1px solid var(--outline);background:var(--branco);color:var(--ink);display:inline-flex;align-items:center;gap:6px;}
+  #bannerWrapper .sv-badge b{font-weight:700;}
+  #bannerWrapper .sv-badge .sv-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  #bannerWrapper .d-blue{background:var(--g-blue);}
+  #bannerWrapper .d-red{background:var(--g-red);}
+  #bannerWrapper .d-yellow{background:var(--g-yellow);}
+  #bannerWrapper .d-green{background:var(--g-green);}
+  #bannerWrapper .btn-cta{
+    align-self:flex-start;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+    padding:13px 26px;
+    border-radius:999px;
+    background:var(--rosa);
+    color:var(--branco);
+    font-weight:700;
+    font-size:14px;
+    line-height:1.3;
+    box-shadow:0 8px 18px rgba(202,38,101,.35);
+    transition:all .28s cubic-bezier(.2,0,0,1);
+    max-width:100%;
+    text-align:center;
+  }
+  #bannerWrapper .btn-cta:hover{background:var(--roxo);color:var(--branco);box-shadow:0 12px 26px rgba(68,37,99,.4);transform:translateY(-2px);}
+  #bannerWrapper .btn-cta .sv-arrow{transition:transform .28s ease;}
+  #bannerWrapper .btn-cta:hover .sv-arrow{transform:translateX(4px);}
+  /* Cards de curso */
+  #bannerWrapper .card-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:14px;}
+  #bannerWrapper .course-card{
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    border-radius:18px;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  #bannerWrapper .course-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(68,37,99,.14);}
+  #bannerWrapper .card-top{display:flex;align-items:center;gap:10px;}
+  #bannerWrapper .card-icon{flex:0 0 36px;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--roxo),var(--rosa));color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;}
+  #bannerWrapper .card-tag{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rosa);}
+  #bannerWrapper .course-card h4{margin:2px 0 0;font-size:14.5px;line-height:1.25;font-weight:700;color:var(--ink);overflow-wrap:break-word;}
+  #bannerWrapper .course-card p{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-soft);overflow-wrap:break-word;}
+  #bannerWrapper .card-cta{align-self:flex-start;margin-top:auto;padding:7px 14px;border-radius:999px;background:var(--rosa);color:#fff;font-size:12.5px;font-weight:700;line-height:1.3;transition:background .25s ease;}
+  #bannerWrapper .card-cta:hover{background:var(--roxo);color:#fff;}
+  /* Trilha de cursos */
+  #bannerWrapper .trail-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:14px;}
+  #bannerWrapper .trail-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:16px;
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    color:var(--ink);
+    min-width:0;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  #bannerWrapper .trail-item:hover{color:var(--ink);transform:translateY(-2px);box-shadow:0 8px 18px rgba(68,37,99,.12);}
+  #bannerWrapper .trail-num{flex:0 0 34px;width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,var(--roxo),var(--rosa));color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  #bannerWrapper .trail-text{min-width:0;display:flex;flex-direction:column;}
+  #bannerWrapper .trail-text strong{font-size:13.5px;line-height:1.25;overflow-wrap:break-word;}
+  #bannerWrapper .trail-text span{margin-top:2px;font-size:12px;font-weight:700;color:var(--rosa);}
+  /* Trilha compacta: até 6 cursos, só título + seta */
+  #bannerWrapper .trail-compact{gap:10px 8px;}
+  #bannerWrapper .trail-compact .trail-item{padding:8px 12px 8px 8px;gap:10px;border-radius:14px;}
+  #bannerWrapper .trail-compact .trail-num{flex-basis:28px;width:28px;height:28px;border-radius:10px;font-size:13px;}
+  #bannerWrapper .trail-compact .trail-text{flex:1;}
+  #bannerWrapper .trail-compact .trail-text strong{font-size:13px;}
+  #bannerWrapper .trail-go{flex:none;margin-left:auto;font-weight:700;color:var(--rosa);}
+  /* Clima festivo: trilha completa */
+  #bannerWrapper .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1;}
+  #bannerWrapper .confetti i{position:absolute;top:-16px;width:7px;height:12px;border-radius:2px;opacity:.9;animation:sv-fall 7s linear infinite;}
+  #bannerWrapper .confetti i:nth-child(1){left:6%;background:var(--g-yellow);animation-duration:6.5s;}
+  #bannerWrapper .confetti i:nth-child(2){left:18%;background:var(--rosa);animation-delay:-2s;animation-duration:8s;}
+  #bannerWrapper .confetti i:nth-child(3){left:30%;background:var(--g-blue);animation-delay:-4.5s;width:9px;height:9px;border-radius:50%;}
+  #bannerWrapper .confetti i:nth-child(4){left:42%;background:var(--g-green);animation-delay:-1s;animation-duration:7.5s;}
+  #bannerWrapper .confetti i:nth-child(5){left:55%;background:var(--laranja);animation-delay:-5.5s;}
+  #bannerWrapper .confetti i:nth-child(6){left:66%;background:#fff;animation-delay:-3s;animation-duration:9s;width:6px;height:6px;border-radius:50%;}
+  #bannerWrapper .confetti i:nth-child(7){left:77%;background:var(--g-red);animation-delay:-6.5s;animation-duration:6s;}
+  #bannerWrapper .confetti i:nth-child(8){left:88%;background:var(--g-yellow);animation-delay:-2.5s;animation-duration:8.5s;}
+  #bannerWrapper .confetti i:nth-child(9){left:94%;background:var(--g-blue);animation-delay:-4s;}
+  #bannerWrapper .confetti i:nth-child(10){left:48%;background:var(--rosa);animation-delay:-7s;animation-duration:9.5s;width:9px;height:9px;border-radius:50%;}
+  #bannerWrapper .serie-chip.chip-gold .num{background:linear-gradient(90deg,var(--g-yellow),var(--laranja));color:#1f1b24;}
+  #bannerWrapper .trail-progress{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  #bannerWrapper .trail-bar{flex:1;height:8px;border-radius:999px;background:var(--outline);overflow:hidden;}
+  #bannerWrapper .trail-bar-fill{display:block;width:100%;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--g-blue),var(--g-red) 35%,var(--g-yellow) 65%,var(--g-green));}
+  #bannerWrapper .sv-slide.is-active .trail-bar-fill{animation:sv-grow 1.6s cubic-bezier(.2,.8,.2,1);}
+  #bannerWrapper .trail-progress span{flex:none;font-size:12px;font-weight:700;color:var(--ink);}
+  #bannerWrapper .trail-item.is-new{background:linear-gradient(135deg,#fff1f6,var(--surface-2));border-color:rgba(202,38,101,.35);}
+  #bannerWrapper .trail-item.is-new{position:relative;}
+  #bannerWrapper .trail-new{position:absolute;top:-7px;right:12px;padding:1px 8px;border-radius:999px;background:var(--rosa);color:#fff;font-size:9.5px;font-weight:700;line-height:1.4;letter-spacing:.6px;text-transform:uppercase;box-shadow:0 3px 8px rgba(202,38,101,.35);}
+  /* Biblioteca do Saber */
+  #bannerWrapper .lib-slide{
+    flex:1;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    background:linear-gradient(180deg,#141414 0%,#0b0b0e 100%);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:26px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  #bannerWrapper .lib-slide::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(202,38,101,.25),transparent 45%),radial-gradient(circle at 10% 90%,rgba(68,37,99,.35),transparent 50%);pointer-events:none;}
+  #bannerWrapper .lib-header{position:relative;z-index:2;display:flex;align-items:center;gap:12px;min-width:0;}
+  #bannerWrapper .lib-logo{flex:0 0 42px;width:42px;height:42px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  #bannerWrapper .lib-logo img{width:100%;height:100%;max-width:100%;object-fit:contain;}
+  #bannerWrapper .lib-title{min-width:0;}
+  #bannerWrapper .lib-title h2{margin:0;font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.1;color:#fff;overflow-wrap:break-word;}
+  #bannerWrapper .lib-lead{position:relative;z-index:2;max-width:600px;font-size:13.5px;line-height:1.5;color:#c9c9c9;margin:10px 0 16px;overflow-wrap:break-word;}
+  #bannerWrapper .lib-row{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,100px));
+    gap:12px;
+    width:100%;
+    margin-bottom:16px;
+  }
+  #bannerWrapper .lib-poster{
+    width:100%;
+    min-width:0;
+    aspect-ratio:2 / 3;
+    border-radius:8px;
+    display:flex;
+    align-items:flex-end;
+    padding:8px;
+    font-size:10.5px;
+    font-weight:700;
+    line-height:1.15;
+    color:#fff;
+    overflow-wrap:break-word;
+    -webkit-hyphens:auto;
+    hyphens:auto;
+    box-shadow:0 10px 20px rgba(0,0,0,.45);
+    transition:transform .25s ease;
+    border:1px solid rgba(255,255,255,.08);
+    background-color:#2a2a30;
+    background-size:cover;
+    background-position:center;
+    position:relative;
+    overflow:hidden;
+  }
+  #bannerWrapper .lib-poster:hover{transform:translateY(-3px);}
+  #bannerWrapper .lib-poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.85) 100%);}
+  #bannerWrapper .lib-poster span{position:relative;z-index:1;min-width:0;}
+  #bannerWrapper .p1{background-image:url('https://lh3.googleusercontent.com/d/1teBzpWoDclLSETloZE6GPpLbVbWCSxy4');}
+  #bannerWrapper .p2{background-image:url('https://lh3.googleusercontent.com/d/1spJulxCYBg-6G2KlY-ZEjXquvGKbd7QU');}
+  #bannerWrapper .p3{background-image:url('https://lh3.googleusercontent.com/d/12UTiXQ3mixRfoMgvztVcUaN2nvQtJD0Q');}
+  #bannerWrapper .p4{background-image:url('https://lh3.googleusercontent.com/d/1kPOpEVR04vdC6x7Xi05MvU7qa-2egXyv');}
+  #bannerWrapper .p5{background-image:url('https://lh3.googleusercontent.com/d/1odOavGzsIYNI7MFI-gdwaAexElKbrUea');}
+  #bannerWrapper .p6{background-image:url('https://lh3.googleusercontent.com/d/1noCdoEL5DkzOZGa_pBV9GS1oUrEGIk-M');}
+  #bannerWrapper .lib-footer{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  #bannerWrapper .lib-badges{display:flex;gap:8px;flex-wrap:wrap;min-width:0;}
+  #bannerWrapper .lib-badge{padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;line-height:1.3;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#eee;}
+  #bannerWrapper .btn-lib{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;background:#e50914;color:#fff;font-weight:800;font-size:13.5px;line-height:1.3;transition:all .25s ease;}
+  #bannerWrapper .btn-lib:hover{background:#ff1a2b;color:#fff;transform:translateY(-2px);}
+  /* Paginação — faixa própria abaixo dos slides, nunca sobre o conteúdo */
+  #bannerWrapper .sv-pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    height:34px;
+    margin:0;
+    padding:0;
+    background:var(--surface);
+    border-top:1px solid var(--outline);
+  }
+  #bannerWrapper .dot-nav{width:9px;height:9px;border-radius:50%;background:rgba(68,37,99,0.25);cursor:pointer;transition:all .3s ease;}
+  #bannerWrapper .dot-nav.is-active{background:var(--rosa);transform:scale(1.3);}
+
+  /* ===== COMPACTO: tela ou banner com até 760px ===== */
+  @media (max-width:760px){
+    #bannerWrapper{border-radius:22px;}
+    #bannerWrapper .sv-slide{flex-direction:column;height:auto;}
+    #bannerWrapper .sv-side{flex:none;width:100%;max-width:100%;padding:18px 20px;}
+    #bannerWrapper .icon-badge, #bannerWrapper .sv-side small{display:none;}
+    #bannerWrapper .sv-side h3{margin-top:12px;font-size:17px;}
+    #bannerWrapper .google-card{margin-top:12px;align-self:flex-start;padding:8px 12px;}
+    #bannerWrapper .arc-1{width:180px;height:180px;right:-60px;top:-30px;}
+    #bannerWrapper .arc-2{width:140px;height:140px;left:-40px;bottom:-25px;}
+    #bannerWrapper .sv-main{padding:20px 20px 22px;justify-content:flex-start;}
+    #bannerWrapper .sv-main h2{font-size:24px;line-height:1.15;}
+    #bannerWrapper .lib-slide{padding:22px 20px;justify-content:flex-start;}
+    #bannerWrapper .lib-title h2{font-size:22px;}
+    #bannerWrapper .lib-lead{margin:8px 0 14px;}
+    #bannerWrapper .lib-row{grid-template-columns:repeat(4,minmax(0,110px));justify-content:center;}
+    #bannerWrapper .desktop-only{display:none;}
+  }
+
+  #bannerWrapper.is-compact{border-radius:22px;}
+  #bannerWrapper.is-compact .sv-slide{flex-direction:column;height:auto;}
+  #bannerWrapper.is-compact .sv-side{flex:none;width:100%;max-width:100%;padding:18px 20px;}
+  #bannerWrapper.is-compact .icon-badge, #bannerWrapper.is-compact .sv-side small{display:none;}
+  #bannerWrapper.is-compact .sv-side h3{margin-top:12px;font-size:17px;}
+  #bannerWrapper.is-compact .google-card{margin-top:12px;align-self:flex-start;padding:8px 12px;}
+  #bannerWrapper.is-compact .arc-1{width:180px;height:180px;right:-60px;top:-30px;}
+  #bannerWrapper.is-compact .arc-2{width:140px;height:140px;left:-40px;bottom:-25px;}
+  #bannerWrapper.is-compact .sv-main{padding:20px 20px 22px;justify-content:flex-start;}
+  #bannerWrapper.is-compact .sv-main h2{font-size:24px;line-height:1.15;}
+  #bannerWrapper.is-compact .lib-slide{padding:22px 20px;justify-content:flex-start;}
+  #bannerWrapper.is-compact .lib-title h2{font-size:22px;}
+  #bannerWrapper.is-compact .lib-lead{margin:8px 0 14px;}
+  #bannerWrapper.is-compact .lib-row{grid-template-columns:repeat(4,minmax(0,110px));justify-content:center;}
+  #bannerWrapper.is-compact .desktop-only{display:none;}
+
+  /* ===== CELULAR: tela ou banner com até 480px ===== */
+  @media (max-width:480px){
+    #bannerWrapper{border-radius:18px;margin:12px auto;}
+    #bannerWrapper .sv-side{padding:16px;}
+    #bannerWrapper .serie-chip{font-size:11px;padding:6px 12px;}
+    #bannerWrapper .sv-side h3{font-size:16px;}
+    #bannerWrapper .sv-main{padding:18px 16px 20px;}
+    #bannerWrapper .sv-main h2{font-size:21px;}
+    #bannerWrapper .sv-lead{font-size:13.5px;}
+    #bannerWrapper .info-grid, #bannerWrapper .card-grid, #bannerWrapper .trail-grid{grid-template-columns:minmax(0,1fr);}
+    #bannerWrapper .btn-cta{align-self:stretch;justify-content:center;padding:13px 18px;}
+    #bannerWrapper .lib-slide{padding:18px 16px 20px;}
+    #bannerWrapper .lib-logo{flex-basis:36px;width:36px;height:36px;}
+    #bannerWrapper .lib-title h2{font-size:20px;}
+    #bannerWrapper .lib-lead{font-size:13px;}
+    #bannerWrapper .lib-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+    #bannerWrapper .lib-poster{padding:6px;font-size:9.5px;}
+    #bannerWrapper .hide-narrow{display:none;}
+    #bannerWrapper .lib-footer{flex-direction:column;align-items:stretch;}
+    #bannerWrapper .btn-lib{justify-content:center;}
+  }
+
+  #bannerWrapper.is-narrow{border-radius:18px;margin:12px auto;}
+  #bannerWrapper.is-narrow .sv-side{padding:16px;}
+  #bannerWrapper.is-narrow .serie-chip{font-size:11px;padding:6px 12px;}
+  #bannerWrapper.is-narrow .sv-side h3{font-size:16px;}
+  #bannerWrapper.is-narrow .sv-main{padding:18px 16px 20px;}
+  #bannerWrapper.is-narrow .sv-main h2{font-size:21px;}
+  #bannerWrapper.is-narrow .sv-lead{font-size:13.5px;}
+  #bannerWrapper.is-narrow .info-grid, #bannerWrapper.is-narrow .card-grid, #bannerWrapper.is-narrow .trail-grid{grid-template-columns:minmax(0,1fr);}
+  #bannerWrapper.is-narrow .btn-cta{align-self:stretch;justify-content:center;padding:13px 18px;}
+  #bannerWrapper.is-narrow .lib-slide{padding:18px 16px 20px;}
+  #bannerWrapper.is-narrow .lib-logo{flex-basis:36px;width:36px;height:36px;}
+  #bannerWrapper.is-narrow .lib-title h2{font-size:20px;}
+  #bannerWrapper.is-narrow .lib-lead{font-size:13px;}
+  #bannerWrapper.is-narrow .lib-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  #bannerWrapper.is-narrow .lib-poster{padding:6px;font-size:9.5px;}
+  #bannerWrapper.is-narrow .hide-narrow{display:none;}
+  #bannerWrapper.is-narrow .lib-footer{flex-direction:column;align-items:stretch;}
+  #bannerWrapper.is-narrow .btn-lib{justify-content:center;}
+</style>
+</head>
+<body>
+
+<div class="banner-wrapper" id="bannerWrapper" lang="pt-BR">
+
+  <div class="banner-track" id="bannerTrack">
+    <!-- SLIDE 1 — Trilha completa: cursos 1 a 5 -->
+    <div class="sv-slide is-active">
+      <aside class="sv-side">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <div class="arcs"><span class="arc arc-1"></span><span class="arc arc-2"></span></div>
+        <div class="confetti"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="side-top">
+          <span class="serie-chip chip-gold"><span class="num">11</span> Cursos · Trilha completa</span>
+          <div class="icon-badge">🏆</div>
+          <h3>Os <b>11 cursos</b> da trilha de IA estão no ar!</h3>
+          <small>Do primeiro prompt ao projeto final, com certificado da trilha.</small>
+        </div>
+
+        <div class="google-card">
+          <span class="g-dots"><i></i><i></i><i></i><i></i></span>
+          <span>Com apoio do <b>Google</b></span>
+        </div>
+      </aside>
+
+      <div class="sv-main">
+        <div class="eyebrow">Trilha completa · Parte 1 de 2</div>
+        <h2>A trilha de IA está <span class="grad">completa</span>! 🎉</h2>
+        <div class="trail-progress">
+          <div class="trail-bar"><span class="trail-bar-fill"></span></div>
+          <span>11 de 11 cursos</span>
+        </div>
+
+        <div class="trail-grid trail-compact">
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1779/about" target="_blank" rel="noopener">
+            <span class="trail-num">1</span>
+            <span class="trail-text"><strong>Fundamentos de IA Generativa</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1780/about" target="_blank" rel="noopener">
+            <span class="trail-num">2</span>
+            <span class="trail-text"><strong>Conversando com a IA</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1781/about" target="_blank" rel="noopener">
+            <span class="trail-num">3</span>
+            <span class="trail-text"><strong>IA para Organização de Tarefas</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1782/about" target="_blank" rel="noopener">
+            <span class="trail-num">4</span>
+            <span class="trail-text"><strong>Produtividade com Gemini Notebook e Gemini</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1783/about" target="_blank" rel="noopener">
+            <span class="trail-num">5</span>
+            <span class="trail-text"><strong>Criar e Refinar Textos com IA</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+        </div>
+
+        <div class="sv-badge-row">
+          <span class="sv-badge"><span class="sv-dot d-blue"></span><b>Gratuitos</b></span>
+          <span class="sv-badge"><span class="sv-dot d-green"></span>Com certificado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 — Trilha completa: cursos 6 a 11 (9, 10 e 11 são lançamentos) -->
+    <div class="sv-slide">
+      <aside class="sv-side">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <div class="arcs"><span class="arc arc-1"></span><span class="arc arc-2"></span></div>
+        <div class="confetti"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="side-top">
+          <span class="serie-chip chip-gold"><span class="num">6-11</span> Série IA · Saber Virtual</span>
+          <div class="icon-badge">🎓</div>
+          <h3>Chegamos ao <b>projeto final</b>.</h3>
+          <small>Conclua o curso 11 e receba o certificado da trilha.</small>
+        </div>
+
+        <div class="google-card">
+          <span class="g-dots"><i></i><i></i><i></i><i></i></span>
+          <span>Com apoio do <b>Google</b></span>
+        </div>
+      </aside>
+
+      <div class="sv-main">
+        <div class="eyebrow">Trilha completa · Parte 2 de 2</div>
+        <h2>Até o <span class="grad">projeto final</span></h2>
+        <p class="sv-lead">Três lançamentos fecham a trilha: cursos 9, 10 e 11.</p>
+
+        <div class="trail-grid trail-compact">
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1784/about" target="_blank" rel="noopener">
+            <span class="trail-num">6</span>
+            <span class="trail-text"><strong>Criar e Variar Imagens com IA</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1785/about" target="_blank" rel="noopener">
+            <span class="trail-num">7</span>
+            <span class="trail-text"><strong>IA na Prática: Do Problema à Solução</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1786/about" target="_blank" rel="noopener">
+            <span class="trail-num">8</span>
+            <span class="trail-text"><strong>Construção Assistida, Limites e Uso Real</strong></span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item is-new" href="https://sabervirtual.ciee.org.br/course/1787/about" target="_blank" rel="noopener">
+            <span class="trail-num">9</span>
+            <span class="trail-text"><strong>Entendendo o Novo Mundo do Trabalho</strong></span>
+            <span class="trail-new">Novo</span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item is-new" href="https://sabervirtual.ciee.org.br/course/1788/about" target="_blank" rel="noopener">
+            <span class="trail-num">10</span>
+            <span class="trail-text"><strong>Aplicação de IA na Carreira e Desenvolvimento Profissional</strong></span>
+            <span class="trail-new">Novo</span>
+            <span class="trail-go">→</span>
+          </a>
+          <a class="trail-item is-new" href="https://sabervirtual.ciee.org.br/course/1789/about" target="_blank" rel="noopener">
+            <span class="trail-num">11</span>
+            <span class="trail-text"><strong>Projeto Prático em IA</strong></span>
+            <span class="trail-new">Novo</span>
+            <span class="trail-go">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 — Biblioteca do Saber -->
+    <div class="sv-slide">
+      <div class="lib-slide">
+        <div class="lib-header">
+          <div class="lib-logo">
+            <img src="https://lh3.googleusercontent.com/d/1cLkOweNOr3Y86Ndq71yJ_vdylvMYlVXC" alt="Saber Virtual">
+          </div>
+          <div class="lib-title">
+            <h2>Biblioteca do Saber</h2>
+          </div>
+        </div>
+        <p class="lib-lead">Clássicos como Dom Casmurro, A Metamorfose e O Cortiço, com resumos, leitura online e download em PDF.</p>
+
+        <!-- Desktop: 6 livros · Tablet: 4 livros · Celular: 3 livros -->
+        <div class="lib-row">
+          <div class="lib-poster p1"><span>A Divina Comédia</span></div>
+          <div class="lib-poster p2"><span>A Metamorfose</span></div>
+          <div class="lib-poster p3"><span>Memórias Póstumas de Brás Cubas</span></div>
+          <div class="lib-poster p4 hide-narrow"><span>Dom Casmurro</span></div>
+          <div class="lib-poster p5 desktop-only"><span>O Cortiço</span></div>
+          <div class="lib-poster p6 desktop-only"><span>Volta ao Mundo em 80 Dias</span></div>
+        </div>
+
+        <div class="lib-footer">
+          <div class="lib-badges">
+            <span class="lib-badge">📚 Acervo em expansão</span>
+            <span class="lib-badge">⬇️ Download em PDF</span>
+          </div>
+          <a class="btn-lib" href="https://sabervirtual.ciee.org.br/course/1778/about" target="_blank" rel="noopener">
+            Explorar acervo →
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sv-pagination" id="pagination">
+    <span class="dot-nav is-active" role="button" aria-label="Slide 1"></span>
+    <span class="dot-nav" role="button" aria-label="Slide 2"></span>
+    <span class="dot-nav" role="button" aria-label="Slide 3"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const bannerWrapper = document.getElementById("bannerWrapper");
+  const slides = bannerWrapper.querySelectorAll(".sv-slide");
+  const dots = bannerWrapper.querySelectorAll(".dot-nav");
+  const totalSlides = slides.length;
+  const intervalTime = 12000;
+  let currentSlide = 0;
+  let slideInterval;
+  let paused = false;
+
+  // Layout pela largura real do banner (complementa os @media acima)
+  function applyLayout() {
+    const w = bannerWrapper.clientWidth;
+    bannerWrapper.classList.toggle("is-compact", w <= 760);
+    bannerWrapper.classList.toggle("is-narrow", w <= 480);
+  }
+  applyLayout();
+  window.addEventListener("resize", applyLayout);
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(() => requestAnimationFrame(applyLayout)).observe(bannerWrapper);
+  }
+
+  function goToSlide(index) {
+    currentSlide = (index + totalSlides) % totalSlides;
+    slides.forEach((s, i) => s.classList.toggle("is-active", i === currentSlide));
+    dots.forEach((d, i) => d.classList.toggle("is-active", i === currentSlide));
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(slideInterval);
+    if (!paused) slideInterval = setInterval(() => goToSlide(currentSlide + 1), intervalTime);
+  }
+
+  dots.forEach((d, i) => d.addEventListener("click", () => goToSlide(i)));
+
+  bannerWrapper.addEventListener("pointerenter", (e) => {
+    if (e.pointerType === "mouse") { paused = true; clearInterval(slideInterval); }
+  });
+  bannerWrapper.addEventListener("pointerleave", (e) => {
+    if (e.pointerType === "mouse") { paused = false; startTimer(); }
+  });
+
+  let touchStartX = 0;
+  bannerWrapper.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    clearInterval(slideInterval);
+  }, {passive: true});
+  bannerWrapper.addEventListener("touchend", (e) => {
+    const diff = e.changedTouches[0].screenX - touchStartX;
+    paused = false;
+    if (Math.abs(diff) > 40) { goToSlide(currentSlide + (diff < 0 ? 1 : -1)); }
+    else { startTimer(); }
+  }, {passive: true});
+
+  startTimer();
+})();
+</script>
+
+</body>
+</html>
