@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saber Virtual — Carrossel de Cursos</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --roxo:#442563; --laranja:#ed6b04; --rosa:#ca2665;
+    --branco:#ffffff; --preto:#000000;
+    --g-blue:#4285F4; --g-red:#EA4335; --g-yellow:#FBBC05; --g-green:#34A853;
+    --surface:#ffffff; --surface-2:#f6f3fb; --outline:#e3e0e8;
+    --ink:#1f1b24; --ink-soft:#5f5a67;
+    --glass:rgba(255,255,255,0.14); --glass-border:rgba(255,255,255,0.25);
+  }
+
+  *{box-sizing:border-box;}
+
+  html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    max-width:100vw;
+    overflow-x:hidden;
+  }
+  body{
+    font-family:'Google Sans','Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:#f0f2f5;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    padding:16px 10px;
+  }
+
+  /* Altura total no desktop: 386px de slide + 34px da faixa de pontinhos = 420px */
+  .banner-wrapper{
+    width:100%;
+    max-width:1024px;
+    border-radius:28px;
+    overflow:hidden;
+    position:relative;
+    background:var(--surface);
+    box-shadow:0 20px 40px rgba(0,0,0,.18);
+  }
+  .banner-track{
+    display:flex;
+    width:400%;
+    height:386px;
+    transition:transform .8s cubic-bezier(.77,0,.175,1);
+  }
+  .slide{
+    flex:0 0 25%;
+    width:25%;
+    max-width:25%;
+    min-width:0;
+    height:100%;
+    position:relative;
+    display:flex;
+    color:var(--ink);
+    overflow:hidden;
+  }
+
+  /* Faixa lateral */
+  .side{
+    flex:0 0 36%;
+    max-width:36%;
+    min-width:0;
+    position:relative;
+    background:linear-gradient(150deg,#1a0b2e 0%,var(--roxo) 60%,#3b2a7a 100%);
+    color:var(--branco);
+    padding:28px 26px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    overflow:hidden;
+  }
+  .side-b5{
+    background:linear-gradient(150deg,#1a052e 0%,var(--roxo) 55%,#681b4f 100%);
+  }
+
+  .glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;pointer-events:none;}
+  .glow-a{width:240px;height:240px;background:var(--rosa);top:-80px;right:-70px;}
+  .glow-b{width:200px;height:200px;background:var(--laranja);bottom:-70px;left:-60px;}
+  .glow-pink{width:200px;height:200px;background:#b32468;bottom:-70px;left:-60px;}
+
+  .arcs{position:absolute;inset:0;pointer-events:none;opacity:.85;overflow:hidden;}
+  .arc{position:absolute;border-radius:50%;border:6px solid transparent;}
+  .arc-1{width:300px;height:300px;right:-120px;top:-60px;border-top-color:var(--g-blue);border-right-color:var(--g-red);animation:spin 26s linear infinite;}
+  .arc-2{width:200px;height:200px;left:-80px;bottom:-40px;border-bottom-color:var(--g-yellow);border-left-color:var(--g-green);animation:spin 20s linear infinite reverse;}
+  .arc-b5-1{border-top-color:var(--rosa);border-right-color:rgba(255,255,255,0.4);}
+  .arc-b5-2{border-bottom-color:#e0357d;border-left-color:var(--branco);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .side-top{position:relative;z-index:2;}
+  .serie-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+  }
+  .serie-chip .num{
+    background:linear-gradient(90deg,var(--laranja),var(--rosa));
+    min-width:20px;
+    height:20px;
+    padding:0 6px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+  }
+  .serie-chip.chip-pink .num{
+    background:linear-gradient(90deg,var(--rosa),#8e1248);
+  }
+
+  .icon-badge{
+    width:64px;
+    height:64px;
+    margin:22px 0 12px;
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    position:relative;
+    z-index:2;
+  }
+  .side h3{position:relative;z-index:2;margin:0;font-size:18px;line-height:1.25;font-weight:500;}
+  .side h3 b{font-weight:700;}
+  .side small{position:relative;z-index:2;display:block;margin-top:8px;font-size:12.5px;opacity:.85;line-height:1.4;}
+
+  .google-card{
+    position:relative;
+    z-index:2;
+    background:var(--branco);
+    color:#3c4043;
+    border-radius:16px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+  }
+  .google-card.card-pink{color:var(--roxo);}
+  .g-dots{display:inline-flex;gap:4px;}
+  .g-dots i{width:9px;height:9px;border-radius:50%;display:block;}
+  .g-dots i:nth-child(1){background:var(--g-blue);} .g-dots i:nth-child(2){background:var(--g-red);}
+  .g-dots i:nth-child(3){background:var(--g-yellow);} .g-dots i:nth-child(4){background:var(--g-green);}
+  .google-card span{font-size:12.5px;font-weight:500;line-height:1.3;}
+  .google-card span b{font-weight:700;}
+
+  /* Conteúdo Principal */
+  .main{
+    flex:1;
+    min-width:0;
+    padding:26px 34px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(66,133,244,.10), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(234,67,53,.08), transparent 45%),
+      var(--surface);
+    overflow:hidden;
+  }
+  .main-b5{
+    background:
+      radial-gradient(circle at 100% 0%, rgba(202,38,101,.10), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(68,37,99,.08), transparent 45%),
+      var(--surface);
+  }
+
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--rosa);margin-bottom:6px;}
+  .main h2{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.8px;font-weight:700;color:var(--ink);overflow-wrap:break-word;}
+  .main h2 .grad{background:linear-gradient(90deg,var(--g-blue),var(--g-red) 45%,var(--laranja) 75%,var(--g-green));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .main h2 .grad-rosa{background:linear-gradient(90deg,var(--roxo),var(--rosa) 60%,#e0357d);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .lead{margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--ink-soft);overflow-wrap:break-word;}
+
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0;}
+  .sub-box{
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    border-radius:16px;
+    padding:11px 14px;
+    font-size:12.5px;
+    line-height:1.4;
+    color:var(--ink-soft);
+    min-width:0;
+    overflow-wrap:break-word;
+  }
+  .sub-box strong{display:block;margin-bottom:2px;font-size:13.5px;color:var(--ink);}
+  .sub-box.b-roxo{border-left:4px solid var(--roxo);}
+  .sub-box.b-rosa{border-left:4px solid var(--rosa);}
+
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .badge{padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:500;border:1px solid var(--outline);background:var(--branco);color:var(--ink);display:inline-flex;align-items:center;gap:6px;}
+  .badge b{font-weight:700;}
+  .badge .dot{width:8px;height:8px;border-radius:50%;}
+  .d-blue{background:var(--g-blue);} .d-red{background:var(--g-red);}
+  .d-yellow{background:var(--g-yellow);} .d-green{background:var(--g-green);}
+
+  .btn-cta{
+    align-self:flex-start;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+    padding:13px 26px;
+    border-radius:999px;
+    background:var(--rosa);
+    color:var(--branco);
+    font-weight:700;
+    font-size:14px;
+    text-decoration:none;
+    box-shadow:0 8px 18px rgba(202,38,101,.35);
+    transition:all .28s cubic-bezier(.2,0,0,1);
+    max-width:100%;
+    text-align:center;
+  }
+  .btn-cta:hover{background:var(--roxo);box-shadow:0 12px 26px rgba(68,37,99,.4);transform:translateY(-2px);}
+  .btn-cta .arrow{transition:transform .28s ease;}
+  .btn-cta:hover .arrow{transform:translateX(4px);}
+
+  /* ===== Cards de curso (Slide 1 — lançamentos) ===== */
+  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  .course-card{
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    border-radius:18px;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .course-card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(68,37,99,.14);}
+  .card-top{display:flex;align-items:center;gap:10px;}
+  .card-icon{flex:0 0 36px;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--roxo),var(--rosa));display:flex;align-items:center;justify-content:center;font-size:17px;}
+  .card-tag{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rosa);}
+  .course-card h4{margin:2px 0 0;font-size:14.5px;line-height:1.25;color:var(--ink);overflow-wrap:break-word;}
+  .course-card p{margin:0;font-size:12.5px;line-height:1.4;color:var(--ink-soft);overflow-wrap:break-word;}
+  .card-cta{align-self:flex-start;margin-top:auto;padding:7px 14px;border-radius:999px;background:var(--rosa);color:#fff;font-size:12.5px;font-weight:700;text-decoration:none;transition:background .25s ease;}
+  .card-cta:hover{background:var(--roxo);}
+
+  /* ===== Trilha 1–4 (Slide 2) ===== */
+  .trail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  .trail-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:16px;
+    background:var(--surface-2);
+    border:1px solid var(--outline);
+    color:var(--ink);
+    text-decoration:none;
+    min-width:0;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .trail-item:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(68,37,99,.12);}
+  .trail-num{flex:0 0 34px;width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,var(--roxo),var(--rosa));color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  .trail-text{min-width:0;display:flex;flex-direction:column;}
+  .trail-text strong{font-size:13.5px;line-height:1.25;overflow-wrap:break-word;}
+  .trail-text span{margin-top:2px;font-size:12px;font-weight:700;color:var(--rosa);}
+
+  /* ===== SLIDE 3 — Biblioteca do Saber ===== */
+  .lib-slide{
+    flex:1;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    background:linear-gradient(180deg,#141414 0%,#0b0b0e 100%);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:26px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  .lib-slide::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(202,38,101,.25),transparent 45%),radial-gradient(circle at 10% 90%,rgba(68,37,99,.35),transparent 50%);pointer-events:none;}
+  .lib-header{position:relative;z-index:2;display:flex;align-items:center;gap:12px;min-width:0;}
+  .lib-logo{flex:0 0 42px;width:42px;height:42px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .lib-logo img{width:100%;height:100%;object-fit:contain;}
+  .lib-title{min-width:0;}
+  .lib-title h2{margin:0;font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.1;}
+  .lib-lead{position:relative;z-index:2;max-width:600px;font-size:13.5px;line-height:1.5;color:#c9c9c9;margin:10px 0 16px;overflow-wrap:break-word;}
+
+  .lib-row{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,100px));
+    gap:12px;
+    width:100%;
+    margin-bottom:16px;
+  }
+  .lib-poster{
+    width:100%;
+    min-width:0;
+    aspect-ratio:2/3;
+    border-radius:8px;
+    display:flex;
+    align-items:flex-end;
+    padding:8px;
+    font-size:10.5px;
+    font-weight:700;
+    line-height:1.15;
+    color:#fff;
+    overflow-wrap:break-word;
+    box-shadow:0 10px 20px rgba(0,0,0,.45);
+    transition:transform .25s ease;
+    border:1px solid rgba(255,255,255,.08);
+    background-size:cover;
+    background-position:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .lib-poster:hover{transform:translateY(-3px);}
+  .lib-poster::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.85) 100%);}
+  .lib-poster span{position:relative;z-index:1;min-width:0;}
+  .p1{background-image:url('https://lh3.googleusercontent.com/d/1teBzpWoDclLSETloZE6GPpLbVbWCSxy4');}
+  .p2{background-image:url('https://lh3.googleusercontent.com/d/1spJulxCYBg-6G2KlY-ZEjXquvGKbd7QU');}
+  .p3{background-image:url('https://lh3.googleusercontent.com/d/12UTiXQ3mixRfoMgvztVcUaN2nvQtJD0Q');}
+  .p4{background-image:url('https://lh3.googleusercontent.com/d/1kPOpEVR04vdC6x7Xi05MvU7qa-2egXyv');}
+  .p5{background-image:url('https://lh3.googleusercontent.com/d/1odOavGzsIYNI7MFI-gdwaAexElKbrUea');}
+  .p6{background-image:url('https://lh3.googleusercontent.com/d/1noCdoEL5DkzOZGa_pBV9GS1oUrEGIk-M');}
+
+  .lib-footer{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .lib-badges{display:flex;gap:8px;flex-wrap:wrap;min-width:0;}
+  .lib-badge{padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:600;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#eee;}
+  .btn-lib{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;background:#e50914;color:#fff;font-weight:800;font-size:13.5px;text-decoration:none;transition:all .25s ease;}
+  .btn-lib:hover{background:#ff1a2b;transform:translateY(-2px);}
+
+  /* Paginação — faixa própria abaixo dos slides, nunca sobre o conteúdo */
+  .pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    height:34px;
+    background:var(--surface);
+    border-top:1px solid var(--outline);
+  }
+  .dot-nav{width:9px;height:9px;border-radius:50%;background:rgba(68,37,99,0.25);cursor:pointer;transition:all .3s ease;}
+  .dot-nav.active{background:var(--rosa);transform:scale(1.3);}
+
+  /* ===== COMPACTO: banner com até 760px de largura (classe aplicada via script) ===== */
+  .is-compact .banner-track{height:auto;}
+  .is-compact .slide{flex-direction:column;height:auto;}
+  .is-compact .side{flex:none;width:100%;max-width:100%;padding:18px 20px;}
+  .is-compact .icon-badge,
+  .is-compact .side small{display:none;}
+  .is-compact .side h3{margin-top:12px;font-size:17px;}
+  .is-compact .google-card{margin-top:12px;align-self:flex-start;padding:8px 12px;}
+  .is-compact .arc-1{width:180px;height:180px;right:-60px;top:-30px;}
+  .is-compact .arc-2{width:140px;height:140px;left:-40px;bottom:-25px;}
+  .is-compact .main{padding:20px 20px 22px;}
+  .is-compact .main h2{font-size:24px;line-height:1.15;}
+  .is-compact .lib-slide{padding:22px 20px;}
+  .is-compact .lib-title h2{font-size:22px;}
+  .is-compact .lib-lead{margin:8px 0 14px;}
+  .is-compact .lib-row{grid-template-columns:repeat(4,minmax(0,110px));justify-content:center;gap:12px;}
+  .is-compact .desktop-only{display:none;}
+
+  /* ===== CELULAR: banner com até 480px de largura ===== */
+  .is-narrow .side{padding:16px;}
+  .is-narrow .side h3{font-size:16px;}
+  .is-narrow .main{padding:18px 16px 20px;}
+  .is-narrow .main h2{font-size:21px;}
+  .is-narrow .lead{font-size:13.5px;}
+  .is-narrow .info-grid,
+  .is-narrow .card-grid,
+  .is-narrow .trail-grid{grid-template-columns:1fr;}
+  .is-narrow .btn-cta{align-self:stretch;justify-content:center;}
+  .is-narrow .lib-slide{padding:18px 16px 20px;}
+  .is-narrow .lib-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  .is-narrow .hide-narrow{display:none;}
+  .is-narrow .lib-footer{flex-direction:column;align-items:stretch;}
+  .is-narrow .btn-lib{justify-content:center;}
+</style>
+</head>
+<body>
+
+<div class="banner-wrapper" id="bannerWrapper">
+
+  <div class="banner-track" id="bannerTrack">
+
+    <!-- SLIDE 1 — Lançamentos: Cursos 5 e 6 -->
+    <div class="slide">
+      <aside class="side">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <div class="arcs"><span class="arc arc-1"></span><span class="arc arc-2"></span></div>
+
+        <div class="side-top">
+          <span class="serie-chip"><span class="num">5-6</span> Série IA · Saber Virtual</span>
+          <div class="icon-badge">🚀</div>
+          <h3><b>Dois lançamentos</b> para você criar com IA.</h3>
+          <small>Cursos 5 e 6 da série de cursos de IA do Saber Virtual.</small>
+        </div>
+
+        <div class="google-card">
+          <span class="g-dots"><i></i><i></i><i></i><i></i></span>
+          <span>Com apoio do <b>Google</b></span>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="eyebrow">Lançamento duplo · Saber Virtual</div>
+        <h2>Crie <span class="grad">textos e imagens</span> com IA</h2>
+        <p class="lead">Dois novos cursos práticos, gratuitos e com certificado.</p>
+
+        <div class="card-grid">
+          <div class="course-card">
+            <div class="card-top">
+              <span class="card-icon">✍️</span>
+              <span class="card-tag">Novo · Curso 05</span>
+            </div>
+            <h4>Criar e Refinar Textos com IA</h4>
+            <p>Do rascunho ao texto pronto: brainstorming, ajuste de tom e estilo e revisão crítica.</p>
+            <!-- TROCAR: link do curso 05 -->
+            <a class="card-cta" href="#" target="_blank" rel="noopener">Inscreva-se →</a>
+          </div>
+          <div class="course-card">
+            <div class="card-top">
+              <span class="card-icon">🎨</span>
+              <span class="card-tag">Novo · Curso 06</span>
+            </div>
+            <h4>Criar e Variar Imagens com IA</h4>
+            <p>Prompts visuais, composição e variações de imagens com estilo consistente.</p>
+            <!-- TROCAR: link do curso 06 -->
+            <a class="card-cta" href="#" target="_blank" rel="noopener">Inscreva-se →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 — Trilha: Cursos 1 a 4 -->
+    <div class="slide">
+      <aside class="side">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <div class="arcs"><span class="arc arc-1"></span><span class="arc arc-2"></span></div>
+
+        <div class="side-top">
+          <span class="serie-chip"><span class="num">1-4</span> Série IA · Saber Virtual</span>
+          <div class="icon-badge">✦</div>
+          <h3>Construa sua <b>base</b> na trilha de IA.</h3>
+          <small>Os cursos 1 a 4 seguem com inscrições abertas.</small>
+        </div>
+
+        <div class="google-card">
+          <span class="g-dots"><i></i><i></i><i></i><i></i></span>
+          <span>Com apoio do <b>Google</b></span>
+        </div>
+      </aside>
+
+      <div class="main">
+        <div class="eyebrow">Trilha de IA · Saber Virtual</div>
+        <h2>Já fez os <span class="grad">cursos 1 a 4</span>?</h2>
+
+        <div class="trail-grid">
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1779/about" target="_blank" rel="noopener">
+            <span class="trail-num">1</span>
+            <span class="trail-text"><strong>Fundamentos de IA Generativa</strong><span>Inscreva-se →</span></span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1780/about" target="_blank" rel="noopener">
+            <span class="trail-num">2</span>
+            <span class="trail-text"><strong>Conversando com a IA</strong><span>Inscreva-se →</span></span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1781/about" target="_blank" rel="noopener">
+            <span class="trail-num">3</span>
+            <span class="trail-text"><strong>IA para Organização de Tarefas</strong><span>Inscreva-se →</span></span>
+          </a>
+          <a class="trail-item" href="https://sabervirtual.ciee.org.br/course/1782/about" target="_blank" rel="noopener">
+            <span class="trail-num">4</span>
+            <span class="trail-text"><strong>Produtividade com Gemini Notebook e Gemini</strong><span>Inscreva-se →</span></span>
+          </a>
+        </div>
+
+        <div class="badge-row">
+          <span class="badge"><span class="dot d-blue"></span><b>Gratuitos</b></span>
+          <span class="badge"><span class="dot d-red"></span>Cursos práticos</span>
+          <span class="badge"><span class="dot d-green"></span>Com certificado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 — Biblioteca do Saber -->
+    <div class="slide">
+      <div class="lib-slide">
+        <div class="lib-header">
+          <div class="lib-logo">
+            <img src="https://lh3.googleusercontent.com/d/1cLkOweNOr3Y86Ndq71yJ_vdylvMYlVXC" alt="Saber Virtual">
+          </div>
+          <div class="lib-title">
+            <h2>Biblioteca do Saber</h2>
+          </div>
+        </div>
+        <p class="lib-lead">Clássicos como Dom Casmurro, A Metamorfose e O Cortiço, com resumos, leitura online e download em PDF.</p>
+
+        <!-- Desktop: 6 livros · Tablet: 4 livros · Celular: 3 livros -->
+        <div class="lib-row">
+          <div class="lib-poster p1"><span>A Divina Comédia</span></div>
+          <div class="lib-poster p2"><span>A Metamorfose</span></div>
+          <div class="lib-poster p3"><span>Memórias Póstumas de Brás Cubas</span></div>
+          <div class="lib-poster p4 hide-narrow"><span>Dom Casmurro</span></div>
+          <div class="lib-poster p5 desktop-only"><span>O Cortiço</span></div>
+          <div class="lib-poster p6 desktop-only"><span>Volta ao Mundo em 80 Dias</span></div>
+        </div>
+
+        <div class="lib-footer">
+          <div class="lib-badges">
+            <span class="lib-badge">📚 Acervo em expansão</span>
+            <span class="lib-badge">⬇️ Download em PDF</span>
+          </div>
+          <a class="btn-lib" href="https://sabervirtual.ciee.org.br/course/1778/about" target="_blank" rel="noopener">
+            Explorar acervo →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 — Encontros Virtuais: Oficinas de Cri@tividades Online -->
+    <div class="slide">
+      <aside class="side side-b5">
+        <span class="glow glow-a"></span>
+        <span class="glow glow-pink"></span>
+        <div class="arcs"><span class="arc arc-1 arc-b5-1"></span><span class="arc arc-2 arc-b5-2"></span></div>
+
+        <div class="side-top">
+          <span class="serie-chip chip-pink"><span class="num">🎯</span> Ao Vivo · Saber Virtual</span>
+          <div class="icon-badge">🎯</div>
+          <h3>Encontros virtuais em <b>tempo real</b>.</h3>
+          <small>Reflexões práticas sobre o Mundo do Trabalho.</small>
+        </div>
+
+        <div class="google-card card-pink">
+          <span style="font-size:16px;">✨</span>
+          <span><b>Certificado exclusivo</b> por encontro ou ciclo</span>
+        </div>
+      </aside>
+
+      <div class="main main-b5">
+        <div class="eyebrow">Ao vivo · Mundo do Trabalho</div>
+        <h2>Oficinas de <span class="grad-rosa">Cri@tividades Online</span></h2>
+        <p class="lead">Encontros gratuitos sobre currículo, entrevistas, redes sociais e mais.</p>
+
+        <div class="info-grid">
+          <div class="sub-box b-roxo">
+            <strong>📅 Terças, até 27/10</strong>
+            ⏰ 14h30 às 16h (Brasília)
+          </div>
+          <div class="sub-box b-rosa">
+            <strong>🎓 Com certificado</strong>
+            Ciclo completo ou por encontro
+          </div>
+        </div>
+
+        <a class="btn-cta" href="https://forms.gle/qxL7RmemZKz3VGt47" target="_blank" rel="noopener">
+          Inscreva-se pelo formulário <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="pagination" id="pagination">
+    <span class="dot-nav active" onclick="goToSlide(0)"></span>
+    <span class="dot-nav" onclick="goToSlide(1)"></span>
+    <span class="dot-nav" onclick="goToSlide(2)"></span>
+    <span class="dot-nav" onclick="goToSlide(3)"></span>
+  </div>
+</div>
+
+<script>
+  const track = document.getElementById("bannerTrack");
+  const dots = document.querySelectorAll(".dot-nav");
+  const bannerWrapper = document.getElementById("bannerWrapper");
+  const totalSlides = track.children.length;
+  const intervalTime = 12000;
+  let currentSlide = 0;
+  let slideInterval;
+  let paused = false;
+
+  // Layout pela largura real do banner (funciona mesmo dentro de colunas estreitas do LMS)
+  function applyLayout() {
+    const w = bannerWrapper.clientWidth;
+    bannerWrapper.classList.toggle("is-compact", w <= 760);
+    bannerWrapper.classList.toggle("is-narrow", w <= 480);
+  }
+  applyLayout();
+  window.addEventListener("resize", applyLayout);
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(() => requestAnimationFrame(applyLayout)).observe(bannerWrapper);
+  }
+
+  function updateUI() {
+    track.style.transform = `translateX(-${currentSlide * (100 / totalSlides)}%)`;
+    dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+  }
+
+  function goToSlide(index) {
+    currentSlide = (index + totalSlides) % totalSlides;
+    updateUI();
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(slideInterval);
+    if (!paused) slideInterval = setInterval(() => goToSlide(currentSlide + 1), intervalTime);
+  }
+
+  function pause() {
+    paused = true;
+    clearInterval(slideInterval);
+  }
+
+  function resume() {
+    paused = false;
+    startTimer();
+  }
+
+  bannerWrapper.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") pause(); });
+  bannerWrapper.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") resume(); });
+
+  let touchStartX = 0;
+
+  bannerWrapper.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    pause();
+  }, {passive: true});
+
+  bannerWrapper.addEventListener("touchend", (e) => {
+    const diff = e.changedTouches[0].screenX - touchStartX;
+    paused = false;
+    if (Math.abs(diff) > 40) { goToSlide(currentSlide + (diff < 0 ? 1 : -1)); }
+    else { startTimer(); }
+  }, {passive: true});
+
+  startTimer();
+</script>
+
+</body>
+</html>
